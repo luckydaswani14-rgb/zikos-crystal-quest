@@ -19,10 +19,14 @@ window.TileMap = class TileMap {
     }
 
     getTile(tx, ty) {
-        if (tx < 0 || tx >= this.width || ty < 0 || ty >= this.height) {
-            // Out of bounds bottom/sides is solid; top is open
-            if (ty >= this.height) return TILE.SOLID;
-            return TILE.EMPTY;
+        if (tx < 0 || tx >= this.width) {
+            return TILE.SOLID; // Side walls are solid to block walking off map
+        }
+        if (ty < 0) {
+            return TILE.EMPTY; // Top is open
+        }
+        if (ty >= this.height) {
+            return TILE.EMPTY; // Bottom is open (bottomless pits/wells cause death)
         }
         return this.tiles[ty * this.width + tx];
     }
