@@ -1,0 +1,13 @@
+# Gradle build outputs and caches
+.gradle/
+build/
+android-app/.gradle/
+android-app/app/build/
+android-app/local.properties
+android-app/.idea/
+android-app/build/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

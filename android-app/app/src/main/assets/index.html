@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errStr = message + '\nSource: ' + source + ' (Line ' + lineno + ', Col ' + colno + ')' + (error ? '\nStack: ' + error.stack : '');
+      console.error(errStr);
+      fetch('/error?msg=' + encodeURIComponent(errStr)).catch(function(){});
+      
+      // Also show on screen in a red box so the user is immediately aware
+      const div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.inset = '0';
+      div.style.background = 'rgba(100,0,0,0.95)';
+      div.style.color = '#fff';
+      div.style.padding = '20px';
+      div.style.fontFamily = 'monospace';
+      div.style.zIndex = '999999';
+      div.style.overflow = 'auto';
+      div.innerHTML = '<h1>Client JS Error Caught:</h1><pre>' + errStr + '</pre><br><button onclick="window.location.reload()" style="padding: 12px 24px; font-size: 18px; font-family: sans-serif; font-weight: bold; background: #FFD700; color: #000; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">Reload & Restart Game</button>';
+      document.body.appendChild(div);
+      return false;
+    };
+    window.onunhandledrejection = function(event) {
+      const errStr = 'Unhandled Promise Rejection: ' + event.reason;
+      console.error(errStr);
+      fetch('/error?msg=' + encodeURIComponent(errStr)).catch(function(){});
+      
+      const div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.inset = '0';
+      div.style.background = 'rgba(100,0,0,0.95)';
+      div.style.color = '#fff';
+      div.style.padding = '20px';
+      div.style.fontFamily = 'monospace';
+      div.style.zIndex = '999999';
+      div.style.overflow = 'auto';
+      div.innerHTML = '<h1>Client Promise Rejection Caught:</h1><pre>' + errStr + '</pre><br><button onclick="window.location.reload()" style="padding: 12px 24px; font-size: 18px; font-family: sans-serif; font-weight: bold; background: #FFD700; color: #000; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">Reload & Restart Game</button>';
+      document.body.appendChild(div);
+      return false;
+    };
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Ziko's Crystal Quest - A colorful 2D platformer adventure. Help brave young Ziko recover magical crystals from the Shadow King across 13 vibrant worlds!" />
+  <meta name="keywords" content="platformer, 2D game, canvas game, adventure, crystals, HTML5 game" />
+  <meta name="theme-color" content="#1a1a3e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Ziko's Crystal Quest" />
+  <meta property="og:description" content="An epic 2D platformer adventure with 15 levels, 13 worlds, and an unforgettable journey!" />
+  <meta property="og:type" content="website" />
+
+  <title>Ziko's Crystal Quest — A 2D Platformer Adventure</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GAME WRAPPER
+  ════════════════════════════════════════════════════════════ -->
+  <div id="game-wrapper">
+
+    <!-- Loading Screen (visible before game starts) -->
+    <div id="loading-screen">
+      <div class="loading-content">
+        <div class="loading-logo">⭐</div>
+        <h1 class="loading-title">Ziko's Crystal Quest</h1>
+        <div class="loading-bar-container">
+          <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        <p class="loading-text" id="loading-text">Loading adventure...</p>
+      </div>
+    </div>
+
+    <!-- Main Game Canvas -->
+    <canvas id="gameCanvas" aria-label="Ziko's Crystal Quest game canvas" role="img"></canvas>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TOUCH CONTROLS OVERLAY (Mobile / Tablet)
+    ════════════════════════════════════════════════════════ -->
+    <div id="touch-controls" aria-label="Touch game controls" role="group">
+
+      <!-- D-Pad (Left side) -->
+      <div id="dpad-left">
+        <button
+          id="btn-left"
+          class="touch-btn dpad-btn dpad-left"
+          aria-label="Move left"
+          title="Move Left">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <button
+          id="btn-right"
+          class="touch-btn dpad-btn dpad-right"
+          aria-label="Move right"
+          title="Move Right">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+        <button
+          id="btn-down"
+          class="touch-btn dpad-btn dpad-down"
+          aria-label="Slide / Climb down"
+          title="Slide">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </button>
+      </div>
+
+      <!-- Action Buttons (Right side) -->
+      <div id="action-buttons">
+        <button
+          id="btn-jump"
+          class="touch-btn action-btn btn-jump"
+          aria-label="Jump"
+          title="Jump (B)">
+          B
+        </button>
+        <button
+          id="btn-attack"
+          class="touch-btn action-btn btn-attack"
+          aria-label="Attack"
+          title="Attack (X)">
+          X
+        </button>
+        <button
+          id="btn-sprint"
+          class="touch-btn action-btn btn-sprint"
+          aria-label="Sprint"
+          title="Sprint (Y)">
+          Y
+        </button>
+        <button
+          id="btn-special"
+          class="touch-btn action-btn btn-special"
+          aria-label="Special ability"
+          title="Special (A)">
+          A
+        </button>
+      </div>
+
+      <!-- Top buttons (Pause etc.) -->
+      <div id="top-buttons">
+        <button
+          id="btn-pause"
+          class="touch-btn top-btn"
+          aria-label="Pause game"
+          title="Pause">
+          ⏸
+        </button>
+        <button
+          id="btn-fullscreen"
+          class="touch-btn top-btn"
+          aria-label="Toggle fullscreen"
+          title="Fullscreen">
+          ⛶
+        </button>
+      </div>
+
+    </div><!-- /#touch-controls -->
+
+  </div><!-- /#game-wrapper -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GAME SCRIPTS — Loaded in dependency order
+       All use global scope (no ES6 modules) for file:// compat
+  ════════════════════════════════════════════════════════════ -->
+
+  <!-- 1. Shared Constants & Utilities (must be first) -->
+  <script src="js/constants.js"></script>
+
+  <!-- 2. Engine Systems -->
+  <script src="js/engine/InputManager.js"></script>
+  <script src="js/engine/Camera.js"></script>
+  <script src="js/engine/AudioManager.js"></script>
+  <script src="js/engine/Physics.js"></script>
+  <script src="js/engine/SaveManager.js"></script>
+  <script src="js/engine/Renderer.js"></script>
+
+  <!-- 3. World Systems -->
+  <script src="js/world/ParticleSystem.js"></script>
+  <script src="js/world/Background.js"></script>
+  <script src="js/world/TileMap.js"></script>
+  <script src="js/world/Platform.js"></script>
+
+  <!-- 4. Entity Base (Must load before collectibles, player, and enemies) -->
+  <script src="js/entities/Entity.js"></script>
+
+  <!-- 5. Collectibles (Depends on Entity) -->
+  <script src="js/collectibles/Collectible.js"></script>
+  <script src="js/collectibles/Coin.js"></script>
+  <script src="js/collectibles/Gem.js"></script>
+  <script src="js/collectibles/PowerUp.js"></script>
+  <script src="js/collectibles/Checkpoint.js"></script>
+
+  <!-- 6. Player & Companion (Depends on Entity) -->
+  <script src="js/entities/Player.js"></script>
+  <script src="js/entities/Companion.js"></script>
+
+  <!-- 7. Enemy Base & Boss Base (Depends on Entity) -->
+  <script src="js/entities/Enemy.js"></script>
+  <script src="js/entities/Boss.js"></script>
+
+  <!-- 8. Enemy Types & Boss Types -->
+  <script src="js/entities/enemies/Slime.js"></script>
+  <script src="js/entities/enemies/Bat.js"></script>
+  <script src="js/entities/enemies/FireSprite.js"></script>
+  <script src="js/entities/enemies/IceGolem.js"></script>
+  <script src="js/entities/enemies/ShieldKnight.js"></script>
+  <script src="js/entities/enemies/GiantBrute.js"></script>
+  <script src="js/entities/enemies/JumpingFrog.js"></script>
+  <script src="js/entities/enemies/FlyingDragon.js"></script>
+  <script src="js/entities/bosses/ShadowKing.js"></script>
+
+  <!-- 9. Level System (Depends on entities and tilemaps) -->
+  <script src="js/world/Level.js"></script>
+
+  <!-- 10. UI Modules -->
+  <script src="js/ui/HUD.js"></script>
+  <script src="js/ui/Menu.js"></script>
+  <script src="js/ui/PauseMenu.js"></script>
+  <script src="js/ui/GameOver.js"></script>
+  <script src="js/ui/Victory.js"></script>
+  <script src="js/ui/Settings.js"></script>
+  <script src="js/ui/Achievements.js"></script>
+
+  <!-- 10. Level Data (embedded JS to work on file://) -->
+  <script src="levels/level1.js"></script>
+  <script src="levels/level2.js"></script>
+  <script src="levels/level3.js"></script>
+  <script src="levels/level4.js"></script>
+  <script src="levels/level5.js"></script>
+  <script src="levels/level6.js"></script>
+  <script src="levels/level7.js"></script>
+  <script src="levels/level8.js"></script>
+  <script src="levels/level9.js"></script>
+  <script src="levels/level10.js"></script>
+  <script src="levels/level11.js"></script>
+  <script src="levels/level12.js"></script>
+  <script src="levels/level13.js"></script>
+  <script src="levels/level14.js"></script>
+  <script src="levels/level15.js"></script>
+
+  <!-- 11. Core Game Engine (depends on all above) -->
+  <script src="js/engine/GameEngine.js"></script>
+
+  <!-- 12. Entry Point (initializes and starts the game) -->
+  <script src="js/main.js"></script>
+
+</body>
+</html>
