@@ -271,8 +271,8 @@ body {
   position: absolute;
   bottom: calc(24px + var(--safe-bottom));
   right: calc(16px + var(--safe-right));
-  width: calc(var(--touch-btn-size) * 2 + var(--touch-btn-gap));
-  height: calc(var(--touch-btn-size) * 2 + var(--touch-btn-gap));
+  width: calc(var(--touch-btn-size) * 2.4);
+  height: calc(var(--touch-btn-size) * 2.4);
 }
 
 .action-btn {
@@ -298,14 +298,14 @@ body {
 
 .btn-attack {
   /* X — left */
-  bottom: calc(var(--touch-btn-size) / 2 + var(--touch-btn-gap) / 2);
+  top: 50%;
   left: 0;
-  transform: translateY(50%);
+  transform: translateY(-50%);
   background: rgba(200, 80, 220, 0.85);
   border-color: rgba(220, 150, 255, 0.7);
   box-shadow: 0 4px 16px rgba(200,80,220,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
 }
-.btn-attack:active { transform: translateY(50%) scale(0.88); }
+.btn-attack:active { transform: translateY(-50%) scale(0.88); }
 
 .btn-sprint {
   /* Y — top center */
@@ -320,14 +320,14 @@ body {
 
 .btn-special {
   /* A — right */
-  bottom: calc(var(--touch-btn-size) / 2 + var(--touch-btn-gap) / 2);
+  top: 50%;
   right: 0;
-  transform: translateY(50%);
+  transform: translateY(-50%);
   background: rgba(220, 60, 60, 0.85);
   border-color: rgba(255, 120, 120, 0.7);
   box-shadow: 0 4px 16px rgba(220,60,60,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
 }
-.btn-special:active { transform: translateY(50%) scale(0.88); }
+.btn-special:active { transform: translateY(-50%) scale(0.88); }
 
 /* ── Top Control Buttons ─────────────────────────────────────── */
 #top-buttons {
