@@ -186,7 +186,7 @@ window.Enemy = class Enemy extends Entity {
     //  TILE COLLISION
     // ─────────────────────────────────────────────
     _applyTileCollision(dt, tileMap) {
-        if (!tileMap || typeof tileMap.getTileAt !== 'function') return;
+        if (!tileMap || typeof tileMap.getTile !== 'function') return;
 
         const hw = this.width;
         const hh = this.height;
@@ -201,16 +201,16 @@ window.Enemy = class Enemy extends Entity {
 
         for (let ty = topTile; ty <= bottomTile; ty++) {
             // Check left side
-            const tileL = tileMap.getTileAt(leftTile, ty);
-            if (tileL && tileL.type === TILE.SOLID) {
+            const tileL = tileMap.getTile(leftTile, ty);
+            if (tileL === TILE.SOLID || tileL === TILE.COIN_BLOCK || tileL === TILE.SECRET) {
                 this.x  = (leftTile + 1) * TILE_SIZE;
                 this.vx = 0;
                 this.facing *= -1;
                 break;
             }
             // Check right side
-            const tileR = tileMap.getTileAt(rightTile, ty);
-            if (tileR && tileR.type === TILE.SOLID) {
+            const tileR = tileMap.getTile(rightTile, ty);
+            if (tileR === TILE.SOLID || tileR === TILE.COIN_BLOCK || tileR === TILE.SECRET) {
                 this.x  = rightTile * TILE_SIZE - hw;
                 this.vx = 0;
                 this.facing *= -1;
@@ -230,8 +230,8 @@ window.Enemy = class Enemy extends Entity {
 
         for (let tx = leftTile2; tx <= rightTile2; tx++) {
             // Check ceiling
-            const tileTop = tileMap.getTileAt(tx, topTile2);
-            if (tileTop && tileTop.type === TILE.SOLID && this.vy < 0) {
+            const tileTop = tileMap.getTile(tx, topTile2);
+            if ((tileTop === TILE.SOLID || tileTop === TILE.COIN_BLOCK || tileTop === TILE.SECRET) && this.vy < 0) {
                 this.y  = (topTile2 + 1) * TILE_SIZE;
                 this.vy = 0;
                 break;
@@ -240,8 +240,10 @@ window.Enemy = class Enemy extends Entity {
 
         for (let tx = leftTile2; tx <= rightTile2; tx++) {
             // Check floor (SOLID and SEMI_SOLID)
-            const tileBot = tileMap.getTileAt(tx, bottomTile2);
-            if (tileBot && (tileBot.type === TILE.SOLID || tileBot.type === TILE.SEMI_SOLID) && this.vy >= 0) {
+            const tileBot = tileMap.getTile(tx, bottomTile2);
+            const isSolid = (tileBot === TILE.SOLID || tileBot === TILE.COIN_BLOCK || tileBot === TILE.SECRET);
+            const isPlatform = (tileBot === TILE.CLOUD || tileBot === TILE.SEMI_SOLID);
+            if ((isSolid || isPlatform) && this.vy >= 0) {
                 this.y        = bottomTile2 * TILE_SIZE - hh;
                 this.vy       = 0;
                 this.onGround = true;
@@ -254,7 +256,7 @@ window.Enemy = class Enemy extends Entity {
     //  CLIFF CHECK — no solid tile one step ahead+below
     // ─────────────────────────────────────────────
     _checkCliff(tileMap) {
-        if (!tileMap || typeof tileMap.getTileAt !== 'function') return false;
+        if (!tileMap || typeof tileMap.getTile !== 'function') return false;
 
         const stepX   = this.facing * TILE_SIZE;
         const checkX  = (this.facing > 0)
@@ -265,15 +267,16 @@ window.Enemy = class Enemy extends Entity {
         const tx = Math.floor((checkX + stepX * 0.5) / TILE_SIZE);
         const ty = Math.floor(checkY / TILE_SIZE);
 
-        const tile = tileMap.getTileAt(tx, ty);
-        return !(tile && (tile.type === TILE.SOLID || tile.type === TILE.SEMI_SOLID));
+        const tile = tileMap.getTile(tx, ty);
+        const isSolid = (tile === TILE.SOLID || tile === TILE.COIN_BLOCK || tile === TILE.SECRET || tile === TILE.SEMI_SOLID || tile === TILE.CLOUD);
+        return !isSolid;
     }
 
     // ─────────────────────────────────────────────
     //  WALL CHECK — solid tile directly ahead
     // ─────────────────────────────────────────────
     _checkWallAhead(tileMap) {
-        if (!tileMap || typeof tileMap.getTileAt !== 'function') return false;
+        if (!tileMap || typeof tileMap.getTile !== 'function') return false;
 
         const checkX = (this.facing > 0)
             ? this.x + this.width + 2
@@ -283,8 +286,8 @@ window.Enemy = class Enemy extends Entity {
         const tx     = Math.floor(checkX / TILE_SIZE);
         const ty     = Math.floor(midY   / TILE_SIZE);
 
-        const tile = tileMap.getTileAt(tx, ty);
-        return !!(tile && tile.type === TILE.SOLID);
+        const tile = tileMap.getTile(tx, ty);
+        return (tile === TILE.SOLID || tile === TILE.COIN_BLOCK || tile === TILE.SECRET);
     }
 
     // ─────────────────────────────────────────────
@@ -408,16 +411,13 @@ window.Enemy = class Enemy extends Entity {
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 / count) * i + rnd(-0.3, 0.3);
                 const speed = rnd(60, 160);
-                particles.spawn({
-                    x      : cx,
-                    y      : cy,
+                particles.emit('spark', cx, cy, {
                     vx     : Math.cos(angle) * speed,
                     vy     : Math.sin(angle) * speed - 50,
                     life   : rnd(0.25, 0.5),
                     size   : rnd(3, 6),
                     color  : '#ff2222',
-                    gravity: true,
-                    fade   : true,
+                    gravity: 400,
                 });
             }
         }
@@ -446,17 +446,13 @@ window.Enemy = class Enemy extends Entity {
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 / count) * i + rnd(-0.4, 0.4);
                 const speed = rnd(80, 220);
-                particles.spawn({
-                    x      : cx + rnd(-8, 8),
-                    y      : cy + rnd(-8, 8),
+                particles.emit('smoke', cx + rnd(-8, 8), cy + rnd(-8, 8), {
                     vx     : Math.cos(angle) * speed,
                     vy     : Math.sin(angle) * speed - 80,
                     life   : rnd(0.4, 0.9),
                     size   : rnd(5, 12),
                     color  : colors[rndInt(0, colors.length - 1)],
-                    gravity: true,
-                    fade   : true,
-                    shrink : true,
+                    gravity: 300,
                 });
             }
         }
