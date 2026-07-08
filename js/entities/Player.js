@@ -219,7 +219,17 @@ window.Player = class Player extends window.Entity {
 
             // Jump Action
             if (this.jumpBufferTime > 0) {
-                if (this.onGround || this.coyoteTime > 0) {
+                if (this.inWater) {
+                    // Swim upward inside water
+                    this.vy = -PLAYER.JUMP_FORCE * 0.65;
+                    this.jumpBufferTime = 0;
+                    this.state = 'jump';
+                    this.canDoubleJump = true; // reset double-jump for when exiting water
+                    audio.playSound(SFX.JUMP);
+                    if (particles) {
+                        particles.emitBurst('bubbles', this.getCenterX(), this.y + this.height, 4);
+                    }
+                } else if (this.onGround || this.coyoteTime > 0) {
                     this.vy = -PLAYER.JUMP_FORCE;
                     this.onGround = false;
                     this.coyoteTime = 0;
