@@ -271,8 +271,8 @@ body {
   position: absolute;
   bottom: calc(24px + var(--safe-bottom));
   right: calc(16px + var(--safe-right));
-  width: calc(var(--touch-btn-size) * 2.4);
-  height: calc(var(--touch-btn-size) * 2.4);
+  width: calc(var(--touch-btn-size) * 3.0);
+  height: calc(var(--touch-btn-size) * 3.0);
 }
 
 .action-btn {
