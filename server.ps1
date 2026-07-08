@@ -2,7 +2,7 @@
 # Uses System.Net.HttpListener to serve files and logs client exceptions.
 
 $Port = 8000
-$Prefix = "http://localhost:$Port/"
+$Prefix = "http://127.0.0.1:$Port/"
 
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($Prefix)
