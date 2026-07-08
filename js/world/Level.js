@@ -288,8 +288,11 @@ window.Level = class Level {
             }
         }
 
-        // Fall into instant kill pit bounds check
-        if (this.player.y > this.tileMap.getWorldHeight() + 64) {
+        // Fall into instant kill pit or water bounds check
+        if (this.player.y > this.tileMap.getWorldHeight() + 64 || this.player.inWater) {
+            if (this.player.inWater && this.player.state !== 'dead') {
+                this.engine.audio.playSound(SFX.SPLASH);
+            }
             this.player.die(this.engine.audio, this.engine.particles);
         }
     }
